@@ -9,34 +9,107 @@ import FileExplorer from './FileExplorer'
 const MonacoEditor = dynamic(() => import('@monaco-editor/react'), { ssr: false })
 
 const mockBugData = {
-  description: "There's a bug in the following code that causes the sum function to return incorrect results for certain inputs. The bug is in the 'math.js' file.",
+  description: "Users are reporting that our shopping cart calculator is giving incorrect totals. The bug appears to be in the price calculation logic. Review the code and fix the issue in the 'cartCalculator.js' file.",
   files: {
-    'math.js': `
-function mySum(a, b) {
-  return a - b;
+    'cartCalculator.js': `
+// Handles shopping cart price calculations
+function calculateItemTotal(quantity, price, discount = 0) {
+  // Bug: Incorrect discount application
+  const subtotal = quantity * price;
+  const discountAmount = subtotal - discount;  // Bug: Should be subtotal * discount
+  return discountAmount;
 }
 
-return mySum(5, 3);  // Expected: 8, Actual: 2
+module.exports = { calculateItemTotal };
     `.trim(),
+    
+    'shoppingCart.js': `
+const { calculateItemTotal } = require('./cartCalculator');
+const { formatCurrency } = require('./utils');
+
+class ShoppingCart {
+  constructor() {
+    this.items = [];
+  }
+
+  addItem(product, quantity) {
+    this.items.push({
+      product,
+      quantity,
+      total: calculateItemTotal(
+        quantity, 
+        product.price, 
+        product.discount
+      )
+    });
+  }
+
+  getTotal() {
+    return this.items.reduce((sum, item) => sum + item.total, 0);
+  }
+
+  displayCart() {
+    return this.items.map(item => ({
+      name: item.product.name,
+      quantity: item.quantity,
+      total: formatCurrency(item.total)
+    }));
+  }
+}
+
+module.exports = { ShoppingCart };
+    `.trim(),
+
+    'utils.js': `
+function formatCurrency(amount) {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD'
+  }).format(amount);
+}
+
+module.exports = { formatCurrency };
+    `.trim(),
+
     'test.js': `
-const { mySum } = require('./math');
+const { ShoppingCart } = require('./shoppingCart');
 
-console.log(mySum(5, 3)); // Expected: 8, Actual: 2
-    `.trim(),
-    'index.js': `
-const { mySum } = require('./math');
+// Test case
+const cart = new ShoppingCart();
 
-function printSum(a, b) {
-  console.log(\`The sum of \${a} and \${b} is \${mySum(a, b)}\`);
-}
+// Add items with different discounts
+cart.addItem(
+  { name: "T-Shirt", price: 20.00, discount: 0.2 }, // 20% discount
+  2
+);
+cart.addItem(
+  { name: "Jeans", price: 50.00, discount: 0.1 }, // 10% discount
+  1
+);
 
-printSum(5, 3);
-    `.trim(),
+console.log('Cart Items:', cart.displayCart());
+console.log('Total:', formatCurrency(cart.getTotal()));
+
+/* Expected output:
+Cart Items: [
+  { name: "T-Shirt", quantity: 2, total: "$32.00" },  // (20 * 2) * 0.8 = $32
+  { name: "Jeans", quantity: 1, total: "$45.00" }     // 50 * 0.9 = $45
+]
+Total: $77.00
+
+Actual output:
+Cart Items: [
+  { name: "T-Shirt", quantity: 2, total: "$28.00" },  // Incorrect discount
+  { name: "Jeans", quantity: 1, total: "$40.00" }     // Incorrect discount
+]
+Total: $68.00
+*/
+    `.trim()
   }
 }
 
 export default function AssessmentLayout() {
-  const [currentFile, setCurrentFile] = useState('math.js')
+  const [currentFile, setCurrentFile] = useState('cartCalculator.js')
   const [files, setFiles] = useState(mockBugData.files)
   const [feedback, setFeedback] = useState('')
 
@@ -77,7 +150,7 @@ export default function AssessmentLayout() {
           </div>
         </div>
         <div className="col-span-3">
-          <SubmitSolution currentFile={files[currentFile as keyof typeof files]} files={files} setFeedback={setFeedback} />
+          <SubmitSolution files={files} setFeedback={setFeedback} />
           {feedback && (
             <div className="mt-4 p-4 bg-gray-800 rounded-lg">
               <h2 className="text-xl font-semibold mb-2">Feedback</h2>
