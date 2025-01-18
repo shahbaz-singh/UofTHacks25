@@ -15,3 +15,4 @@ export default function BugDescription({ description }: BugDescriptionProps) {
     </div>
   )
 }
+

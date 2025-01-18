@@ -1,4 +1,4 @@
-import { Button } from "@/components/ui/button"
+import { Button } from "./ui/button"
 import { Send } from 'lucide-react'
 
 interface SubmitSolutionProps {
@@ -9,10 +9,10 @@ interface SubmitSolutionProps {
 export default function SubmitSolution({ files, setFeedback }: SubmitSolutionProps) {
   const handleSubmit = () => {
     // This is a simple validation. In a real-world scenario, you'd want to run tests or use a more sophisticated validation method.
-    if (files['math.py'].includes('return a + b')) {
-      setFeedback('Great job! You\'ve successfully fixed the bug in the math.py file.')
+    if (files['math.js'].includes('return a + b;')) {
+      setFeedback('Great job! You\'ve successfully fixed the bug in the math.js file.')
     } else {
-      setFeedback('The bug is still present in the math.py file. Please try again.')
+      setFeedback('The bug is still present in the math.js file. Please try again.')
     }
   }
 
@@ -27,3 +27,4 @@ export default function SubmitSolution({ files, setFeedback }: SubmitSolutionPro
     </div>
   )
 }
+
