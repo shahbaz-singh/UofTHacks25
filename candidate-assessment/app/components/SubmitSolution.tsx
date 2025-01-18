@@ -2,6 +2,8 @@ import { Button } from "./ui/button"
 import { Send } from 'lucide-react'
 import { useState } from 'react'
 import { Challenge } from '../data/challenges'
+import { SolutionQueryGPT } from "../api/gpt-api/grade-solution"
+
 
 declare global {
   var CartItem: any;
@@ -12,9 +14,10 @@ interface SubmitSolutionProps {
   currentChallenge: Challenge
   files: { [key: string]: string }
   setFeedback: (feedback: string) => void
+  expectedFunctionality: string
 }
 
-export default function SubmitSolution({ currentChallenge, files, setFeedback }: SubmitSolutionProps) {
+export default function SubmitSolution({ currentChallenge, files, setFeedback, expectedFunctionality}: SubmitSolutionProps) {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showSolution, setShowSolution] = useState(false)
 
@@ -223,7 +226,15 @@ export default function SubmitSolution({ currentChallenge, files, setFeedback }:
     }
   }
 
-  const handleSubmit = () => {
+  const testAIChallengeSolution = async (files: { [key: string]: string }, expectedFunctionality: string) => {
+    const feedback: string = await SolutionQueryGPT(files, expectedFunctionality)
+    if (feedback.length === 0) {
+        return 'ERROR GRADING SOLUTION!';
+    }
+    return feedback;
+  }
+
+  const handleSubmit = async () => {
     setIsSubmitting(true)
     try {
       let result
@@ -240,6 +251,10 @@ export default function SubmitSolution({ currentChallenge, files, setFeedback }:
           result = testLibrarySystem(files)
           setFeedback(result)
           break
+        case 'ai-challenge':
+            result = await testAIChallengeSolution(files, expectedFunctionality)
+            setFeedback(result)
+            break
         default:
           setFeedback('Unknown challenge type')
       }

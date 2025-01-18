@@ -24,7 +24,7 @@ export default function Home() {
   description: string
   files: { [key: string]: string }
 }
-   the description attribute should describe the expected functionality of the snippet of code so that the user knows 
+   the id attribute should have the value "ai-challenge". the description attribute should describe the expected functionality of the snippet of code so that the user knows 
    what to expect when they correctly fix the codebase. the title attribute should be the title of the problem. 
 do not output anything else besides the string in json format.
         `);

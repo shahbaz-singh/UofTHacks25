@@ -96,6 +96,7 @@ export default function AssessmentLayout(gptChallenge: Challenge) {
             currentChallenge={currentChallenge}
             files={files} 
             setFeedback={setFeedback} 
+            expectedFunctionality={currentChallenge.description}
           />
           {feedback && (
             <div className="mt-4 p-4 bg-gray-800 rounded-lg">
