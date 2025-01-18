@@ -279,23 +279,48 @@ export default function SubmitSolution({ currentChallenge, files, setFeedback, e
           <Send className="mr-2" size={16} />
           {isSubmitting ? 'Testing...' : 'Submit Solution'}
         </Button>
-        <Button
-          onClick={() => setShowSolution(!showSolution)}
-          variant="outline"
+        {currentChallenge.id !== 'ai-challenge' && (
+          <Button
+            onClick={() => setShowSolution(!showSolution)}
+            variant="outline"
           className="w-full"
         >
           {showSolution ? 'Hide Solution' : 'Show Solution Hint'}
-        </Button>
+        </Button>)}
+
         {showSolution && (
           <div className="mt-4 p-4 bg-gray-700 rounded-lg">
             <h3 className="text-lg font-semibold mb-2">Solution Hint:</h3>
             <p className="text-sm">
-              The discount calculation should follow this order:
-              1. Apply item-specific discount first
-              2. Then apply category discount
-              3. Finally apply cart-wide discount
-              
-              Check the order of calculations in DefaultDiscountStrategy.calculateTotal()
+              {currentChallenge.id === 'shopping-cart-oop' && (
+                <>
+                  The discount calculation should follow this order:
+                  1. Apply item-specific discount first 
+                  2. Then apply category discount
+                  3. Finally apply cart-wide discount
+                  
+                  Check the order of calculations in DefaultDiscountStrategy.calculateTotal()
+                </>
+              )}
+              {currentChallenge.id === 'bank-account-system' && (
+                <>
+                  Remember to record the transaction in both accounts:
+                  - Source account should record transfer_out
+                  - Target account should record transfer_in
+                  
+                  Check the transfer() method implementation
+                </>
+              )}
+              {currentChallenge.id === 'library-management' && (
+                <>
+                  Key points to implement:
+                  - Book checkout should update availability status
+                  - Return dates should be calculated correctly
+                  - Late returns should incur fines
+                  
+                  Focus on the checkout() and return() methods
+                </>
+              )}
             </p>
           </div>
         )}
