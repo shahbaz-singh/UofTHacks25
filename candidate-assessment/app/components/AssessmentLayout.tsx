@@ -7,6 +7,9 @@ import SubmitSolution from './SubmitSolution'
 import FileExplorer from './FileExplorer'
 import { challenges, Challenge } from '../data/challenges'
 import { Badge } from '@/app/components/ui/badge'
+import { Inter } from 'next/font/google'
+
+const inter = Inter({ subsets: ['latin'] })
 
 const MonacoEditor = dynamic(() => import('@monaco-editor/react'), { ssr: false })
 
@@ -39,9 +42,18 @@ export default function AssessmentLayout(gptChallenge: Challenge) {
   return (
     <div className="container mx-auto p-4">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Software Engineer Assessment</h1>
+        <h1 className={`text-3xl font-[800] tracking-tight ${inter.className}`}>
+          <span className="text-[#FFA116]">Y</span>
+          <span className="text-white">eet</span>
+          <span className="text-[#FFA116]">Code</span>
+        </h1>
         <div className="flex gap-2">
-            <button onClick={() => {handleChallengeChange(gptChallenge)}} className={`px-4 py-2 rounded-lg flex items-center gap-2 bg-gray-800 hover:bg-gray-700`}>AI-Generated Challenge</button>
+          <button 
+            onClick={() => {handleChallengeChange(gptChallenge)}} 
+            className={`px-4 py-2 rounded-lg flex items-center gap-2 bg-gray-800 hover:bg-gray-700`}
+          >
+            AI-Generated Challenge
+          </button>
           {challenges.map(challenge => (
             <button
               key={challenge.id}
