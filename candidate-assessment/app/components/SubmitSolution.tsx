@@ -3,6 +3,8 @@ import { Send } from 'lucide-react'
 import { useState } from 'react'
 import { Challenge } from '../data/challenges'
 import { SolutionQueryGPT } from "../api/gpt-api/grade-solution"
+import { QueryGPT } from "../api/gpt-api/query-gpt"
+import LoadingIndicator from './LoadingIndicator'
 
 
 declare global {
@@ -239,9 +241,39 @@ export default function SubmitSolution({ currentChallenge, files, setFeedback, e
     try {
       let result
       switch (currentChallenge.id) {
+        case 'documentation-challenge-math':
+        case 'documentation-challenge-animals': {
+          const prompt = `
+            First count the words in this documentation.
+            Then evaluate the content quality, but word count determines pass/fail status.
+            
+            Word count rules (these override quality assessment):
+            - Under 100 words: Automatic FAIL, max 30% on metrics
+            - 100-200 words: Automatic FAIL, max 40% on metrics
+            - Over 200 words: Can PASS if quality is good
+            - Over 300 words: High chance to PASS with higher metrics
+            
+            Documentation:
+            ${files['README.md']}
+            
+            Format response exactly as:
+            STATUS: PASS/FAIL
+            Completeness: X%
+            Clarity: X%
+            Technical Accuracy: X%
+            Code Coverage: X%
+            Feedback: One sentence summary of the main improvement needed.
+          `
+          result = await Promise.all([
+            QueryGPT(prompt),
+            new Promise(resolve => setTimeout(resolve, 3000))
+          ])
+          setFeedback(result[0])
+          break
+        }
         case 'shopping-cart-oop':
           result = testShoppingCart(files)
-          setFeedback(result.message)
+          setFeedback(typeof result === 'string' ? result : result.message)
           break
         case 'bank-account-system':
           result = testBankAccount(files)
@@ -282,11 +314,10 @@ export default function SubmitSolution({ currentChallenge, files, setFeedback, e
         {currentChallenge.id !== 'ai-challenge' && (
           <Button
             onClick={() => setShowSolution(!showSolution)}
-            variant="outline"
-          className="w-full"
-        >
-          {showSolution ? 'Hide Solution' : 'Show Solution Hint'}
-        </Button>)}
+            className="w-full bg-transparent border hover:bg-gray-700"
+          >
+            {showSolution ? 'Hide Solution' : 'Show Solution Hint'}
+          </Button>)}
 
         {showSolution && currentChallenge.id !== 'ai-challenge' && (
           <div className="mt-4 p-4 bg-gray-700 rounded-lg">
@@ -325,6 +356,7 @@ export default function SubmitSolution({ currentChallenge, files, setFeedback, e
           </div>
         )}
       </div>
+      {isSubmitting && <LoadingIndicator />}
     </div>
   )
 }

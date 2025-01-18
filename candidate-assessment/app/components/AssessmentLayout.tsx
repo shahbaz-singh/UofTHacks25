@@ -15,8 +15,9 @@ import FileExplorer from './FileExplorer'
 import { challenges, Challenge } from '../data/challenges'
 import { Badge } from '@/app/components/ui/badge'
 import { Inter } from 'next/font/google'
-import { PromptMap} from '../data/prompts'
-import { QueryGPT } from '../api/gpt-api/query-gpt'
+import LoadingScreen from './LoadingScreen'
+import { mathChallenge, animalChallenge, getRandomDocumentationChallenge } from '../data/documentation-challenges'
+import DocumentationMetrics from './DocumentationMetrics'
 const inter = Inter({ subsets: ['latin'] })
 
 const MonacoEditor = dynamic(() => import('@monaco-editor/react'), { ssr: false })
@@ -34,33 +35,10 @@ export default function AssessmentLayout() {
   const [currentFile, setCurrentFile] = useState(Object.keys(challenges[0].files)[0])
   const [files, setFiles] = useState(challenges[0].files)
   const [feedback, setFeedback] = useState<string>('')
-  const [challengeDomain, setChallengeDomain] = useState<string>('');
-  const [domainConfirmed, setDomainConfirmed] = useState(false);
-  const hasMounted = useRef(false); // Ref to track initial render
-  const [gptChallenge, setGptChallenge] = useState<Challenge | null>(null);
-  const [gptChallengeLoaded, setGptChallengeLoaded] = useState(false);
-
-  useEffect(() => {
-    if (hasMounted.current) {
-      // Only run effect after the initial render
-      const prompt = PromptMap[challengeDomain];
-      console.log(`the prompt is ${prompt}`);
-      const query = async () => {
-        const response = await QueryGPT(prompt);
-    console.log(`the response is ${response}`);
-    const responseObj = JSON.parse(response) as Challenge;
-    console.log(`the challenge is ${JSON.stringify(responseObj)}`)
-    setGptChallenge(responseObj);
-    setGptChallengeLoaded(true);
-    }
-
-    query();
-    } else {
-      hasMounted.current = true; // Mark that the component has mounted
-    }
-  }, [domainConfirmed]);
+  const [isLoading, setIsLoading] = useState(true)
 
   const handleChallengeChange = (challenge: Challenge) => {
+    setIsLoading(true)
     setCurrentChallenge(challenge)
     setFiles(challenge.files)
     setCurrentFile(Object.keys(challenge.files)[0])
@@ -74,8 +52,8 @@ export default function AssessmentLayout() {
     }))
   }
 
-  const handleConfirm = () => {
-    setDomainConfirmed(true);
+  if (isLoading) {
+    return <LoadingScreen onLoadingComplete={() => setIsLoading(false)} />
   }
 
   return (
@@ -88,16 +66,33 @@ export default function AssessmentLayout() {
             <span className="text-[#FFA116]">Code</span>
           </h1>
           
+          <DropdownMenu>
+            <DropdownMenuTrigger className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-200 hover:text-white bg-gray-800 rounded-lg hover:bg-gray-700 transition-colors">
+              Select Challenge Type
+              <ChevronDown size={16} />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="bg-gray-800 border-gray-700">
+              <DropdownMenuItem 
+                className="text-gray-200 hover:text-white hover:bg-gray-700 cursor-pointer"
+              >
+                UML Diagram
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                className="text-gray-200 hover:text-white hover:bg-gray-700 cursor-pointer"
+                onClick={() => handleChallengeChange(getRandomDocumentationChallenge())}
+              >
+                Documentation
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                className="text-gray-200 hover:text-white hover:bg-gray-700 cursor-pointer"
+              >
+                Unit Tests
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
 
         <div className="flex gap-2">
-          <button 
-            disabled={!gptChallengeLoaded}
-            onClick={() => {handleChallengeChange(gptChallenge as Challenge)}} 
-            className={`px-4 py-2 rounded-lg flex items-center gap-2 bg-gray-800 hover:bg-gray-700`}
-          >
-            AI-Generated Challenge
-          </button>
           {challenges.map(challenge => (
             <button
               key={challenge.id}
@@ -108,7 +103,6 @@ export default function AssessmentLayout() {
                   : 'bg-gray-800 hover:bg-gray-700'
               }`}
             >
-              {challenge.title}
               <Badge className={difficultyColors[challenge.difficulty]}>
                 {challenge.difficulty}
               </Badge>
@@ -125,58 +119,35 @@ export default function AssessmentLayout() {
             setCurrentFile={setCurrentFile} 
           />
           <BugDescription description={currentChallenge.description} />
-          <div className="relative mt-4">
-            <DropdownMenu>
-              <DropdownMenuTrigger 
-                disabled={domainConfirmed} 
-                className="w-full flex items-center justify-between gap-2 px-4 py-2 text-sm font-medium text-gray-200 disabled:text-gray-500 hover:text-white disabled:hover:text-gray-500 bg-gray-800 disabled:hover:bg-gray-800 rounded-lg hover:bg-gray-700 transition-colors"
-              >
-                {challengeDomain ? challengeDomain : 'Select a Challenge Domain'}
-                <ChevronDown size={16} />
-              </DropdownMenuTrigger>
-              <DropdownMenuContent sideOffset={5} className="bg-gray-800 border-gray-700" align="start">
-                <DropdownMenuItem onClick={() => setChallengeDomain('Object Oriented Programming')} className="text-gray-200 hover:text-white hover:bg-gray-700 cursor-pointer">
-                  Object Oriented Programming
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setChallengeDomain('UML Analysis and Implementation')} className="text-gray-200 hover:text-white hover:bg-gray-700 cursor-pointer">
-                  UML Analysis and Implementation
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setChallengeDomain('Unit Testing')} className="text-gray-200 hover:text-white hover:bg-gray-700 cursor-pointer">
-                  Unit Testing
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setChallengeDomain('Technical Comprehension and Communication')} className="text-gray-200 hover:text-white hover:bg-gray-700 cursor-pointer">
-                  Technical Comprehension and Communication
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-            <button 
-              disabled={challengeDomain === ''}
-              onClick={handleConfirm} 
-              className="w-full mt-2 px-4 py-2 text-sm font-medium text-gray-200 disabled:text-gray-500 hover:text-white disabled:hover:text-gray-500 bg-gray-800 disabled:hover:bg-gray-800 rounded-lg hover:bg-gray-700 transition-colors"
-            >
-              Confirm
-            </button>
-          </div>
         </div>
         <div className="col-span-6">
           <div className="bg-gray-800 rounded-lg overflow-hidden">
             <div className="bg-gray-700 px-4 py-2 text-sm font-medium">{currentFile}</div>
-            <MonacoEditor
-              height="500px"
-              language="javascript"
-              theme="vs-dark"
-              value={files[currentFile as keyof typeof files]}
-              onChange={handleCodeChange}
-              options={{
-                minimap: { enabled: false },
-                scrollBeyondLastLine: false,
-                fontSize: 14,
-                lineNumbers: 'on',
-                roundedSelection: false,
-                readOnly: false,
-                cursorStyle: 'line',
-              }}
-            />
+            {currentFile === 'README.md' ? (
+              <textarea
+                className="w-full h-[500px] p-4 bg-gray-800 text-white font-mono text-sm resize-none focus:outline-none"
+                value={files[currentFile]}
+                onChange={(e) => handleCodeChange(e.target.value)}
+                spellCheck={false}
+              />
+            ) : (
+              <MonacoEditor
+                height="500px"
+                language="javascript"
+                theme="vs-dark"
+                value={files[currentFile]}
+                onChange={handleCodeChange}
+                options={{
+                  minimap: { enabled: false },
+                  scrollBeyondLastLine: false,
+                  fontSize: 14,
+                  lineNumbers: 'on',
+                  roundedSelection: false,
+                  readOnly: false,
+                  cursorStyle: 'line',
+                }}
+              />
+            )}
           </div>
         </div>
         <div className="col-span-3">
@@ -188,8 +159,13 @@ export default function AssessmentLayout() {
           />
           {feedback && (
             <div className="mt-4 p-4 bg-gray-800 rounded-lg">
-              <h2 className="text-xl font-semibold mb-2">Feedback</h2>
-              <p>{feedback}</p>
+              <h2 className="text-xl font-semibold mb-4">Documentation Analysis</h2>
+              {(currentChallenge.id === 'documentation-challenge-math' || 
+                currentChallenge.id === 'documentation-challenge-animals') ? (
+                <DocumentationMetrics feedback={feedback} />
+              ) : (
+                <p className="whitespace-pre-line">{feedback}</p>
+              )}
             </div>
           )}
         </div>

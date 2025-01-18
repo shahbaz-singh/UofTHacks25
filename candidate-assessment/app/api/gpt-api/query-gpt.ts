@@ -1,21 +1,19 @@
 import axios from 'axios';
 
 const OPENAI_API_URL = 'https://api.openai.com/v1/chat/completions';
-const API_KEY = process.env.NEXT_PUBLIC_OPENAI_API_KEY; // Replace with your OpenAI API key
+const API_KEY = process.env.NEXT_PUBLIC_OPENAI_API_KEY;
 
-// Define the prompt and other options
 export async function QueryGPT(prompt: string) {
   try {
     const response = await axios.post(
       OPENAI_API_URL,
       {
-        model: 'gpt-4o', // or 'gpt-3.5-turbo'
+        model: 'gpt-3.5-turbo',
         messages: [
-          { role: 'system', content: 'You are a helpful assistant.' },
-          { role: 'user', content: prompt },
+          { role: 'user', content: prompt }
         ],
-        max_tokens: 2000, // Adjust based on your needs
-        temperature: 0.7, // Controls creativity (higher is more creative)
+        max_tokens: 2000,
+        temperature: 0.7,
       },
       {
         headers: {
@@ -29,7 +27,8 @@ export async function QueryGPT(prompt: string) {
     return content;
 
   } catch (error) {
-    console.error('Error communicating with OpenAI API');
+    console.error('Error communicating with OpenAI API:', error);
+    throw error;
   }
-};
+}
 
