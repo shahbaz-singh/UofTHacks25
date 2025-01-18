@@ -9,12 +9,12 @@ export async function QueryGPT(prompt: string) {
     const response = await axios.post(
       OPENAI_API_URL,
       {
-        model: 'gpt-3.5-turbo', // or 'gpt-3.5-turbo'
+        model: 'gpt-4o', // or 'gpt-3.5-turbo'
         messages: [
           { role: 'system', content: 'You are a helpful assistant.' },
           { role: 'user', content: prompt },
         ],
-        max_tokens: 500, // Adjust based on your needs
+        max_tokens: 2000, // Adjust based on your needs
         temperature: 0.7, // Controls creativity (higher is more creative)
       },
       {
