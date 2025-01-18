@@ -1,0 +1,1 @@
+console.log('Firebase Project ID:', process.env.REACT_APP_FIREBASE_PROJECT_ID);
