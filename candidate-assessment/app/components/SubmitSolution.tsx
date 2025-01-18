@@ -2,18 +2,31 @@ import { Button } from "./ui/button"
 import { Send } from 'lucide-react'
 
 interface SubmitSolutionProps {
+  currentFile: string
   files: { [key: string]: string }
   setFeedback: (feedback: string) => void
 }
 
-export default function SubmitSolution({ files, setFeedback }: SubmitSolutionProps) {
+function safeExecute(code: string) {
+  try {
+    const result = new Function(code)();
+    return result;
+  } catch (e) {
+      return 'Error! Please check your code and try again.';
+  }
+}
+
+export default function SubmitSolution({ currentFile, files, setFeedback }: SubmitSolutionProps) {
   const handleSubmit = () => {
-    // This is a simple validation. In a real-world scenario, you'd want to run tests or use a more sophisticated validation method.
+    /*
     if (files['math.js'].includes('return a + b;')) {
       setFeedback('Great job! You\'ve successfully fixed the bug in the math.js file.')
     } else {
       setFeedback('The bug is still present in the math.js file. Please try again.')
     }
+    */
+    const result = safeExecute(currentFile);
+    setFeedback(result);
   }
 
   return (
