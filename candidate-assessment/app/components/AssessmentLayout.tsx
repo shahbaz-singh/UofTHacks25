@@ -16,7 +16,7 @@ const difficultyColors = {
   'Hard': 'bg-red-500'
 }
 
-export default function AssessmentLayout() {
+export default function AssessmentLayout(gptChallenge: Challenge) {
   const [currentChallenge, setCurrentChallenge] = useState<Challenge>(challenges[0])
   const [currentFile, setCurrentFile] = useState(Object.keys(challenges[0].files)[0])
   const [files, setFiles] = useState(challenges[0].files)
@@ -41,6 +41,7 @@ export default function AssessmentLayout() {
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">Software Engineer Assessment</h1>
         <div className="flex gap-2">
+            <button onClick={() => {handleChallengeChange(gptChallenge)}} className={`px-4 py-2 rounded-lg flex items-center gap-2 bg-gray-800 hover:bg-gray-700`}>AI-Generated Challenge</button>
           {challenges.map(challenge => (
             <button
               key={challenge.id}

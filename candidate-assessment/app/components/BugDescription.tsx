@@ -1,6 +1,6 @@
 import { AlertCircle } from 'lucide-react'
 
-interface BugDescriptionProps {
+export interface BugDescriptionProps {
   description: string
 }
 
