@@ -2,6 +2,13 @@
 
 import { useState } from 'react'
 import dynamic from 'next/dynamic'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "./ui/dropdown-menu"
+import { ChevronDown } from 'lucide-react'
 import BugDescription from './BugDescription'
 import SubmitSolution from './SubmitSolution'
 import FileExplorer from './FileExplorer'
@@ -42,11 +49,35 @@ export default function AssessmentLayout(gptChallenge: Challenge) {
   return (
     <div className="container mx-auto p-4">
       <div className="flex justify-between items-center mb-6">
-        <h1 className={`text-3xl font-[800] tracking-tight ${inter.className}`}>
-          <span className="text-[#FFA116]">Y</span>
-          <span className="text-white">eet</span>
-          <span className="text-[#FFA116]">Code</span>
-        </h1>
+        <div className="flex items-center gap-6">
+          <h1 className={`text-3xl font-[800] tracking-tight ${inter.className}`}>
+            <span className="text-[#FFA116]">Y</span>
+            <span className="text-white">eet</span>
+            <span className="text-[#FFA116]">Code</span>
+          </h1>
+          
+          <DropdownMenu>
+            <DropdownMenuTrigger className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-200 hover:text-white bg-gray-800 rounded-lg hover:bg-gray-700 transition-colors">
+              Products
+              <ChevronDown size={16} />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="bg-gray-800 border-gray-700">
+              <DropdownMenuItem className="text-gray-200 hover:text-white hover:bg-gray-700 cursor-pointer">
+                DocuTester
+              </DropdownMenuItem>
+              <DropdownMenuItem className="text-gray-200 hover:text-white hover:bg-gray-700 cursor-pointer">
+                OhOh!
+              </DropdownMenuItem>
+              <DropdownMenuItem className="text-gray-200 hover:text-white hover:bg-gray-700 cursor-pointer">
+                What's Going on?
+              </DropdownMenuItem>
+              <DropdownMenuItem className="text-gray-200 hover:text-white hover:bg-gray-700 cursor-pointer">
+                unitTesT
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+
         <div className="flex gap-2">
           <button 
             onClick={() => {handleChallengeChange(gptChallenge)}} 
