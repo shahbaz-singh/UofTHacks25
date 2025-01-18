@@ -44,6 +44,7 @@ export default function AssessmentLayout() {
     if (hasMounted.current) {
       // Only run effect after the initial render
       const prompt = PromptMap[challengeDomain];
+      console.log(`the prompt is ${prompt}`);
       const query = async () => {
         const response = await QueryGPT(prompt);
     console.log(`the response is ${response}`);
