@@ -19,8 +19,7 @@ export default function RegisterPage() {
       const docRef = await addDoc(collection(db, 'Users'), {
         name,
         email,
-        questionsEncountered: [],
-        scores: [],
+        logs: [],
       })
 
       // Store user info in localStorage

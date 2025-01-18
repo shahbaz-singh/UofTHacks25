@@ -17,7 +17,9 @@ import { Badge } from '@/app/components/ui/badge'
 import { Inter } from 'next/font/google'
 import { PromptMap} from '../data/prompts'
 import { QueryGPT } from '../api/gpt-api/query-gpt'
+import Modal from './Modal'
 const inter = Inter({ subsets: ['latin'] })
+import { updateDocument } from '../api/database/utils'
 
 const MonacoEditor = dynamic(() => import('@monaco-editor/react'), { ssr: false })
 
@@ -27,18 +29,66 @@ const difficultyColors = {
   'Hard': 'bg-red-500'
 }
 
+// First, define an interface for the props
+interface AssessmentLayoutProps {
+  timer: number;
+  setTimer: (timer: number) => void; // Changed return type from string to void
+}
 
-
-export default function AssessmentLayout() {
+// Then modify the component to accept props object
+export default function AssessmentLayout({ timer, setTimer }: AssessmentLayoutProps) {
   const [currentChallenge, setCurrentChallenge] = useState<Challenge>(challenges[0])
   const [currentFile, setCurrentFile] = useState(Object.keys(challenges[0].files)[0])
   const [files, setFiles] = useState(challenges[0].files)
-  const [feedback, setFeedback] = useState<string>('')
+  const [feedback, setFeedback] = useState<string>('') 
   const [challengeDomain, setChallengeDomain] = useState<string>('');
   const [domainConfirmed, setDomainConfirmed] = useState(false);
   const hasMounted = useRef(false); // Ref to track initial render
   const [gptChallenge, setGptChallenge] = useState<Challenge | null>(null);
   const [gptChallengeLoaded, setGptChallengeLoaded] = useState(false);
+  const [isPageVisible, setIsPageVisible] = useState(true);
+  const [showModal, setShowModal] = useState(false);
+
+  // Format time function
+  const formatTime = (seconds: number): string => {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const remainingSeconds = seconds % 60;
+
+    return `${hours.toString().padStart(2, '0')}:${minutes
+      .toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
+  };
+
+  // Timer effect with modal
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        setIsPageVisible(false);
+        setShowModal(true);
+        updateDocument(localStorage.getItem('userId'), 'User left the assessment page @ ' + formatTime(timer));
+      } else {
+        setIsPageVisible(true);
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    const interval = setInterval(() => {
+      if (isPageVisible) {
+        setTimer(prevTime => prevTime + 1);
+      }
+    }, 1000);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      clearInterval(interval);
+    };
+  }, [isPageVisible]);
+
+  // Close modal handler
+  const closeModal = () => {
+    setShowModal(false);
+  };
 
   useEffect(() => {
     if (hasMounted.current) {
@@ -87,7 +137,9 @@ export default function AssessmentLayout() {
             <span className="text-white">eet</span>
             <span className="text-[#FFA116]">Code</span>
           </h1>
-          
+          <div className="text-white bg-gray-800 px-4 py-2 rounded-lg">
+            Time: {formatTime(timer)}
+          </div>
         </div>
 
         <div className="flex gap-2">
@@ -194,6 +246,13 @@ export default function AssessmentLayout() {
           )}
         </div>
       </div>
+
+      {showModal && (
+        <Modal 
+          message="You have left the assessment page. This will be recorded." 
+          onClose={closeModal}
+        />
+      )}
     </div>
   )
 }

@@ -1,11 +1,14 @@
 'use client'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import AssessmentLayout from '../components/AssessmentLayout'
 import { challenges } from '../data/challenges'
+import { time } from 'console'
+import { Timestamp } from 'firebase/firestore'
 
 export default function AssessmentPage() {
   const router = useRouter()
+  const [timer, setTimer] = useState(0);
 
   useEffect(() => {
     // Check if user is registered
@@ -17,11 +20,8 @@ export default function AssessmentPage() {
   }, [router])
 
   const handleExit = () => {
-    // Clear user data and redirect to registration
-    localStorage.removeItem('userName')
-    localStorage.removeItem('userEmail')
-    localStorage.removeItem('userId')
-    router.push('/')
+    localStorage.setItem('timeSpent', '' + timer);
+    router.push('/analytics')
   }
 
   return (
@@ -32,7 +32,7 @@ export default function AssessmentPage() {
       >
         Exit Assessment
       </button>
-      <AssessmentLayout {...challenges[0]} />
+      <AssessmentLayout timer={timer} setTimer={setTimer} />
     </div>
   )
 } 

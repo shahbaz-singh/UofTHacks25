@@ -1,8 +1,9 @@
 import { Button } from "./ui/button"
 import { Send } from 'lucide-react'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Challenge } from '../data/challenges'
 import { SolutionQueryGPT } from "../api/gpt-api/grade-solution"
+import { updateDocument } from '../api/database/utils'
 
 
 declare global {
@@ -20,6 +21,10 @@ interface SubmitSolutionProps {
 export default function SubmitSolution({ currentChallenge, files, setFeedback, expectedFunctionality}: SubmitSolutionProps) {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showSolution, setShowSolution] = useState(false)
+
+  useEffect(() => {
+    setShowSolution(false);
+  }, [currentChallenge]);
 
   const createClass = (code: string) => {
     // Remove module.exports
@@ -237,6 +242,7 @@ export default function SubmitSolution({ currentChallenge, files, setFeedback, e
   const handleSubmit = async () => {
     setIsSubmitting(true)
     try {
+      updateDocument(localStorage.getItem('userId'), 'User attempted ' + currentChallenge.id);
       let result
       switch (currentChallenge.id) {
         case 'shopping-cart-oop':
@@ -281,7 +287,10 @@ export default function SubmitSolution({ currentChallenge, files, setFeedback, e
         </Button>
         {currentChallenge.id !== 'ai-challenge' && (
           <Button
-            onClick={() => setShowSolution(!showSolution)}
+            onClick={() => {
+              setShowSolution(!showSolution)
+              updateDocument(localStorage.getItem('userId'), 'User viewed hint for ' + currentChallenge.id);
+            }}
             variant="outline"
           className="w-full"
         >

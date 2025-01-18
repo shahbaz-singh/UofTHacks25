@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
-import Modal from './Modal'; // Import the modal component
+import { getDocument } from '../api/database/utils'
 
 // Dynamically import Analytics with no SSR
 const Analytics = dynamic(() => import('./Analytics'), {
@@ -10,66 +10,37 @@ const Analytics = dynamic(() => import('./Analytics'), {
 });
 
 export default function AnalyticsPage() {
-  const sampleMetrics = {
-    timeSpent: 100,
-    hintsUsed: 2,
-    successRate: 70,
-    efficiency: 90,
-    complexity: 75,
-  };
-
-  const [timer, setTimer] = useState(0);
-  const [isPageVisible, setIsPageVisible] = useState(true);
-  const [showModal, setShowModal] = useState(false); // Modal visibility state
+  const [userMetrics, setUserMetrics] = useState({
+    timeSpent: 0,
+    hintReliance: 0,
+    questionsAttempted: 0,
+    codeStyle: 80,
+    technicalExpertise: 40,
+  });
 
   useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (document.hidden) {
-        setIsPageVisible(false);
-      } else {
-        setIsPageVisible(true);
-      }
-    };
+    async function fetchMetrics() {
+      const logs = (await getDocument(localStorage.getItem('userId'))).logs;
+      const hintReliance = logs.filter(log => log.includes('hint')).length;
+      const questionsAttempted = logs.filter(log => log.includes('attempted')).length;
+      
+      setUserMetrics({
+        timeSpent: Number(localStorage.getItem('timeSpent')),
+        hintReliance,
+        questionsAttempted,
+        codeStyle: 80,
+        technicalExpertise: 40,
+      });
 
-    // Listen to visibility change
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-
-    const interval = setInterval(() => {
-      if (isPageVisible) {
-        setTimer(prevTime => prevTime + 1);
-      }
-    }, 1000);
-
-    // Cleanup on component unmount
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      clearInterval(interval);
-    };
-  }, [isPageVisible]);
-
-  useEffect(() => {
-    // Show modal when the user returns to the page
-    if (!isPageVisible) {
-      setShowModal(true);
+      // Clear user data after getting metrics
+      localStorage.removeItem('userName');
+      localStorage.removeItem('userEmail');
+      localStorage.removeItem('userId');
+      localStorage.removeItem('timeSpent');
     }
-  }, [isPageVisible]);
 
-  // Close the modal
-  const closeModal = () => {
-    setShowModal(false);
-  };
-
-  // Convert the timer (seconds) into HH:MM:SS format
-  const formatTime = (seconds) => {
-    const hours = Math.floor(seconds / 3600);
-    const minutes = Math.floor((seconds % 3600) / 60);
-    const remainingSeconds = seconds % 60;
-
-    // Format with leading zeros if needed
-    return `${hours.toString().padStart(2, '0')}:${minutes
-      .toString()
-      .padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
-  };
+    fetchMetrics();
+  }, []);
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
@@ -81,17 +52,12 @@ export default function AnalyticsPage() {
           <p className="mt-2 text-gray-600">
             Track your progress and identify areas for improvement
           </p>
-          <p className="mt-2 text-gray-600">
-            Time spent on page: {formatTime(timer)}
-          </p>
         </div>
 
         <div className="bg-white rounded-lg shadow-lg p-6">
-          <Analytics metrics={sampleMetrics} />
+          <Analytics metrics={userMetrics} />
         </div>
       </div>
-
-      {showModal && <Modal message="You have violated the rules of the exam." onClose={closeModal} />}
     </div>
   );
 }
