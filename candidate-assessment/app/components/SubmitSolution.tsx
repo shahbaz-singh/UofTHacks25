@@ -16,6 +16,7 @@ interface SubmitSolutionProps {
 
 export default function SubmitSolution({ currentChallenge, files, setFeedback }: SubmitSolutionProps) {
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [showSolution, setShowSolution] = useState(false)
 
   const createClass = (code: string) => {
     // Remove module.exports
@@ -72,19 +73,10 @@ export default function SubmitSolution({ currentChallenge, files, setFeedback }:
     }
   }
 
-  // Solution for Shopping Cart Bug:
-  // In DefaultDiscountStrategy class, the discount order is wrong.
-  // Current (buggy) code:
-  //   const afterCartDiscount = subtotal * (1 - cart.getCartDiscount());
-  //   const afterItemDiscount = afterCartDiscount * (1 - item.getItemDiscount());
-  //
-  // Correct implementation should be:
-  //   const afterItemDiscount = subtotal * (1 - item.getItemDiscount());
-  //   const afterCategoryDiscount = afterItemDiscount * (1 - categoryService.getDiscount(item.getCategory()));
-  //   const afterCartDiscount = afterCategoryDiscount * (1 - cart.getCartDiscount());
+  
+
   const testShoppingCart = (files: { [key: string]: string }) => {
     try {
-      // First, evaluate all the code in the correct order
       const evalCode = (code: string, dependencies = {}) => {
         const cleanCode = code.replace(/module\.exports\s*=\s*{[^}]+}/, '')
         return new Function(...Object.keys(dependencies), `
@@ -95,12 +87,14 @@ export default function SubmitSolution({ currentChallenge, files, setFeedback }:
 
       // Evaluate all classes in dependency order
       const strategyClasses = evalCode(files['services/DiscountStrategy.js'])
+      const categoryClasses = evalCode(files['services/CategoryDiscountService.js'])
       const itemClasses = evalCode(files['models/Item.js'])
       const cartItemClasses = evalCode(files['models/CartItem.js'])
       
       // Get the required classes
       const { CartItem } = cartItemClasses
       const { DefaultDiscountStrategy } = strategyClasses
+      const { CategoryDiscountService } = categoryClasses
       const { Item } = itemClasses
       
       // Now evaluate Cart with its dependencies
@@ -114,30 +108,65 @@ export default function SubmitSolution({ currentChallenge, files, setFeedback }:
         return 'Test failed: DefaultDiscountStrategy class not found. Make sure you have defined the class correctly.'
       }
 
+      // Initialize services
+      const categoryService = new CategoryDiscountService()
+      categoryService.setCategoryDiscount('electronics', 0.05) // 5% category discount
+
+      // Make services available to strategy
+      DefaultDiscountStrategy.prototype.categoryService = categoryService
+
       // Test the discount calculation
       const cart = new Cart()
       const strategy = new DefaultDiscountStrategy()
       cart.setDiscountStrategy(strategy)
       
       const laptop = new Item('1', 'Laptop', 1000, 'electronics')
-      laptop.setDiscount(0.1)
+      laptop.setDiscount(0.1) // 10% item discount
       
       cart.addItem(laptop)
-      cart.setCartDiscount(0.15)
+      cart.setCartDiscount(0.15) // 15% cart discount
       
       const total = cart.calculateTotal()
-      const correctTotal = 765 // $1000 * (1 - 0.1) * (1 - 0.15) = correct order
-      const expectedBuggyTotal = 765 // This should match what the buggy code produces
+      
+      // Correct calculation (what it should be after fixing):
+      // $1000 base price
+      // * 0.9 (after 10% item discount) = $900
+      // * 0.95 (after 5% category discount) = $855
+      // * 0.85 (after 15% cart discount) = $726.75
+      const correctTotal = 726.75
 
-      // The test should fail because the current implementation is wrong
+      // Buggy calculation (what we expect from the broken code):
+      // $1000 base price
+      // * 0.85 (cart discount 15% first) = $850
+      // * 0.9 (item discount 10% second) = $765
+      const buggyTotal = 765
+
+      // Check if the implementation is correct
       if (Math.abs(total - correctTotal) < 0.01) {
-        return `Test failed: Your implementation appears to be already fixed. The original code has a bug where cart discount is applied before item discount. Current output: $${total.toFixed(2)}`
+        return {
+          success: true,
+          message: 'Success! The discount calculation has been fixed. Discounts are now being applied in the correct order.'
+        }
       }
 
-      return `Test failed: The discount calculation order is incorrect. The cart discount is being applied before the item discount. To fix this, modify the DefaultDiscountStrategy to apply item discounts first, then cart-wide discounts.`
+      // Check if we still have the bug
+      if (Math.abs(total - buggyTotal) < 0.01) {
+        return {
+          success: false,
+          message: 'Test failed: The discount calculation has a bug! The cart discount is being applied before the item discount, which is incorrect. Fix the order of discount application in DefaultDiscountStrategy.'
+        }
+      }
+
+      return {
+        success: false,
+        message: `Test failed: Your implementation produced $${total.toFixed(2)}. Expected either $${buggyTotal} (buggy) or $${correctTotal} (fixed).`
+      }
     } catch (error) {
       console.error('Shopping cart test error:', error)
-      return `Error executing code: ${error instanceof Error ? error.message : 'Unknown error'}`
+      return {
+        success: false,
+        message: `Error executing code: ${error instanceof Error ? error.message : 'Unknown error'}`
+      }
     }
   }
 
@@ -201,17 +230,19 @@ export default function SubmitSolution({ currentChallenge, files, setFeedback }:
       switch (currentChallenge.id) {
         case 'shopping-cart-oop':
           result = testShoppingCart(files)
+          setFeedback(result.message)
           break
         case 'bank-account-system':
           result = testBankAccount(files)
+          setFeedback(result)
           break
         case 'library-management':
           result = testLibrarySystem(files)
+          setFeedback(result)
           break
         default:
-          result = 'Unknown challenge type'
+          setFeedback('Unknown challenge type')
       }
-      setFeedback(result)
     } catch (error) {
       setFeedback('An error occurred while testing your solution.')
       console.error('Testing error:', error)
@@ -224,14 +255,36 @@ export default function SubmitSolution({ currentChallenge, files, setFeedback }:
     <div className="bg-gray-800 p-4 rounded-lg">
       <h2 className="text-xl font-semibold mb-2">Submit Your Solution</h2>
       <p className="mb-4">When you're ready, click the button below to submit your solution.</p>
-      <Button 
-        onClick={handleSubmit} 
-        className="w-full"
-        disabled={isSubmitting}
-      >
-        <Send className="mr-2" size={16} />
-        {isSubmitting ? 'Testing...' : 'Submit Solution'}
-      </Button>
+      <div className="space-y-4">
+        <Button 
+          onClick={handleSubmit} 
+          className="w-full"
+          disabled={isSubmitting}
+        >
+          <Send className="mr-2" size={16} />
+          {isSubmitting ? 'Testing...' : 'Submit Solution'}
+        </Button>
+        <Button
+          onClick={() => setShowSolution(!showSolution)}
+          variant="outline"
+          className="w-full"
+        >
+          {showSolution ? 'Hide Solution' : 'Show Solution Hint'}
+        </Button>
+        {showSolution && (
+          <div className="mt-4 p-4 bg-gray-700 rounded-lg">
+            <h3 className="text-lg font-semibold mb-2">Solution Hint:</h3>
+            <p className="text-sm">
+              The discount calculation should follow this order:
+              1. Apply item-specific discount first
+              2. Then apply category discount
+              3. Finally apply cart-wide discount
+              
+              Check the order of calculations in DefaultDiscountStrategy.calculateTotal()
+            </p>
+          </div>
+        )}
+      </div>
     </div>
   )
 }
