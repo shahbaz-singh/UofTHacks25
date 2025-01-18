@@ -3,11 +3,9 @@
 import AssessmentLayout from './components/AssessmentLayout'
 import { QueryGPT } from './api/gpt-api/query-gpt'
 import { useEffect, useState } from 'react'
-import { BugDescriptionProps } from './components/BugDescription'
 import { Challenge } from './data/challenges'
 
 export default function Home() {
-    let BugDescription: BugDescriptionProps = { description: "" }; 
     const [gptChallenge, setGptChallenge] = useState<Challenge | null>(null);
 
     useEffect(() => {
@@ -45,7 +43,7 @@ do not output anything else besides the string in json format.
 
   return (
     <main className="min-h-screen bg-gray-900 text-white">
-      <AssessmentLayout {...gptChallenge}/>
+      <AssessmentLayout />
     </main>
   )
 }
