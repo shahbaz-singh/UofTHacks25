@@ -23,9 +23,10 @@ export default function AnalyticsPage() {
       const logs = (await getDocument(localStorage.getItem('userId'))).logs;
       const hintReliance = logs.filter(log => log.includes('hint')).length;
       const questionsAttempted = logs.filter(log => log.includes('attempted')).length;
+      const timeSpent = await Number(localStorage.getItem('timeSpent'));
       
       setUserMetrics({
-        timeSpent: Number(localStorage.getItem('timeSpent')),
+        timeSpent: timeSpent,
         hintReliance,
         questionsAttempted,
         codeStyle: 80,
@@ -36,7 +37,6 @@ export default function AnalyticsPage() {
       localStorage.removeItem('userName');
       localStorage.removeItem('userEmail');
       localStorage.removeItem('userId');
-      localStorage.removeItem('timeSpent');
     }
 
     fetchMetrics();
