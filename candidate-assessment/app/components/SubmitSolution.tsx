@@ -288,7 +288,7 @@ export default function SubmitSolution({ currentChallenge, files, setFeedback, e
           {showSolution ? 'Hide Solution' : 'Show Solution Hint'}
         </Button>)}
 
-        {showSolution && (
+        {showSolution && currentChallenge.id !== 'ai-challenge' && (
           <div className="mt-4 p-4 bg-gray-700 rounded-lg">
             <h3 className="text-lg font-semibold mb-2">Solution Hint:</h3>
             <p className="text-sm">
