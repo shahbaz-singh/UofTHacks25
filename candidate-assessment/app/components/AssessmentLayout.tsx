@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import dynamic from 'next/dynamic'
 import {
   DropdownMenu,
@@ -15,7 +15,8 @@ import FileExplorer from './FileExplorer'
 import { challenges, Challenge } from '../data/challenges'
 import { Badge } from '@/app/components/ui/badge'
 import { Inter } from 'next/font/google'
-
+import { PromptMap} from '../data/prompts'
+import { QueryGPT } from '../api/gpt-api/query-gpt'
 const inter = Inter({ subsets: ['latin'] })
 
 const MonacoEditor = dynamic(() => import('@monaco-editor/react'), { ssr: false })
@@ -26,11 +27,38 @@ const difficultyColors = {
   'Hard': 'bg-red-500'
 }
 
-export default function AssessmentLayout(gptChallenge: Challenge) {
+
+
+export default function AssessmentLayout() {
   const [currentChallenge, setCurrentChallenge] = useState<Challenge>(challenges[0])
   const [currentFile, setCurrentFile] = useState(Object.keys(challenges[0].files)[0])
   const [files, setFiles] = useState(challenges[0].files)
   const [feedback, setFeedback] = useState<string>('')
+  const [challengeDomain, setChallengeDomain] = useState<string>('');
+  const [domainConfirmed, setDomainConfirmed] = useState(false);
+  const hasMounted = useRef(false); // Ref to track initial render
+  const [gptChallenge, setGptChallenge] = useState<Challenge | null>(null);
+  const [gptChallengeLoaded, setGptChallengeLoaded] = useState(false);
+
+  useEffect(() => {
+    if (hasMounted.current) {
+      // Only run effect after the initial render
+      const prompt = PromptMap[challengeDomain];
+      console.log(`the prompt is ${prompt}`);
+      const query = async () => {
+        const response = await QueryGPT(prompt);
+    console.log(`the response is ${response}`);
+    const responseObj = JSON.parse(response) as Challenge;
+    console.log(`the challenge is ${JSON.stringify(responseObj)}`)
+    setGptChallenge(responseObj);
+    setGptChallengeLoaded(true);
+    }
+
+    query();
+    } else {
+      hasMounted.current = true; // Mark that the component has mounted
+    }
+  }, [domainConfirmed]);
 
   const handleChallengeChange = (challenge: Challenge) => {
     setCurrentChallenge(challenge)
@@ -46,6 +74,10 @@ export default function AssessmentLayout(gptChallenge: Challenge) {
     }))
   }
 
+  const handleConfirm = () => {
+    setDomainConfirmed(true);
+  }
+
   return (
     <div className="container mx-auto p-4">
       <div className="flex justify-between items-center mb-6">
@@ -56,31 +88,12 @@ export default function AssessmentLayout(gptChallenge: Challenge) {
             <span className="text-[#FFA116]">Code</span>
           </h1>
           
-          <DropdownMenu>
-            <DropdownMenuTrigger className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-200 hover:text-white bg-gray-800 rounded-lg hover:bg-gray-700 transition-colors">
-              Products
-              <ChevronDown size={16} />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="bg-gray-800 border-gray-700">
-              <DropdownMenuItem className="text-gray-200 hover:text-white hover:bg-gray-700 cursor-pointer">
-                DocuTester
-              </DropdownMenuItem>
-              <DropdownMenuItem className="text-gray-200 hover:text-white hover:bg-gray-700 cursor-pointer">
-                OhOh!
-              </DropdownMenuItem>
-              <DropdownMenuItem className="text-gray-200 hover:text-white hover:bg-gray-700 cursor-pointer">
-                What's Going on?
-              </DropdownMenuItem>
-              <DropdownMenuItem className="text-gray-200 hover:text-white hover:bg-gray-700 cursor-pointer">
-                unitTesT
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
         </div>
 
         <div className="flex gap-2">
           <button 
-            onClick={() => {handleChallengeChange(gptChallenge)}} 
+            disabled={!gptChallengeLoaded}
+            onClick={() => {handleChallengeChange(gptChallenge as Challenge)}} 
             className={`px-4 py-2 rounded-lg flex items-center gap-2 bg-gray-800 hover:bg-gray-700`}
           >
             AI-Generated Challenge
@@ -112,6 +125,38 @@ export default function AssessmentLayout(gptChallenge: Challenge) {
             setCurrentFile={setCurrentFile} 
           />
           <BugDescription description={currentChallenge.description} />
+          <div className="relative mt-4">
+            <DropdownMenu>
+              <DropdownMenuTrigger 
+                disabled={domainConfirmed} 
+                className="w-full flex items-center justify-between gap-2 px-4 py-2 text-sm font-medium text-gray-200 disabled:text-gray-500 hover:text-white disabled:hover:text-gray-500 bg-gray-800 disabled:hover:bg-gray-800 rounded-lg hover:bg-gray-700 transition-colors"
+              >
+                {challengeDomain ? challengeDomain : 'Select a Challenge Domain'}
+                <ChevronDown size={16} />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent sideOffset={5} className="bg-gray-800 border-gray-700" align="start">
+                <DropdownMenuItem onClick={() => setChallengeDomain('Object Oriented Programming')} className="text-gray-200 hover:text-white hover:bg-gray-700 cursor-pointer">
+                  Object Oriented Programming
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setChallengeDomain('UML Analysis and Implementation')} className="text-gray-200 hover:text-white hover:bg-gray-700 cursor-pointer">
+                  UML Analysis and Implementation
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setChallengeDomain('Unit Testing')} className="text-gray-200 hover:text-white hover:bg-gray-700 cursor-pointer">
+                  Unit Testing
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setChallengeDomain('Technical Comprehension and Communication')} className="text-gray-200 hover:text-white hover:bg-gray-700 cursor-pointer">
+                  Technical Comprehension and Communication
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <button 
+              disabled={challengeDomain === ''}
+              onClick={handleConfirm} 
+              className="w-full mt-2 px-4 py-2 text-sm font-medium text-gray-200 disabled:text-gray-500 hover:text-white disabled:hover:text-gray-500 bg-gray-800 disabled:hover:bg-gray-800 rounded-lg hover:bg-gray-700 transition-colors"
+            >
+              Confirm
+            </button>
+          </div>
         </div>
         <div className="col-span-6">
           <div className="bg-gray-800 rounded-lg overflow-hidden">
