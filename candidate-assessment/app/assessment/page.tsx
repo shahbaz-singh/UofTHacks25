@@ -3,21 +3,22 @@ import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import AssessmentLayout from '../components/AssessmentLayout'
 import { challenges } from '../data/challenges'
+import EyeTracker from '../components/EyeTracker'
 
 export default function AssessmentPage() {
   const router = useRouter()
 
   useEffect(() => {
-    // Check if user is registered
     const userName = localStorage.getItem('userName')
     if (!userName) {
-      // If not registered, redirect to registration
       router.push('/')
+    } else if (performance.getEntriesByType('navigation')[0].type === 'navigate') {
+      // Refresh the page only if navigated from another page
+      window.location.reload()
     }
   }, [router])
 
   const handleExit = () => {
-    // Clear user data and redirect to registration
     localStorage.removeItem('userName')
     localStorage.removeItem('userEmail')
     localStorage.removeItem('userId')
@@ -33,6 +34,7 @@ export default function AssessmentPage() {
         Exit Assessment
       </button>
       <AssessmentLayout {...challenges[0]} />
+      <EyeTracker />
     </div>
   )
-} 
+}
