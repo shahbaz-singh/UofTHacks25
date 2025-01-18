@@ -9,34 +9,24 @@ import FileExplorer from './FileExplorer'
 const MonacoEditor = dynamic(() => import('@monaco-editor/react'), { ssr: false })
 
 const mockBugData = {
-  description: "There's a bug in the following code that causes the sum function to return incorrect results for certain inputs. The bug is in the 'math.js' file.",
+  description: "There's a bug in the following code that causes the add function to return incorrect results for certain inputs. The bug is in the 'math.py' file.",
   files: {
-    'math.js': `
-function sum(a, b) {
-  return a - b;
-}
+    'math.py': `def add(a, b):
+    return a - b  # Bug: using subtraction instead of addition`.trim(),
+    'test.py': `from math import add
 
-module.exports = { sum };
-    `.trim(),
-    'test.js': `
-const { sum } = require('./math');
+print(add(5, 3))  # Expected: 8, Actual: 2`.trim(),
+    'main.py': `from math import add
 
-console.log(sum(5, 3)); // Expected: 8, Actual: 2
-    `.trim(),
-    'index.js': `
-const { sum } = require('./math');
+def print_sum(a, b):
+    print(f"The sum of {a} and {b} is {add(a, b)}")
 
-function printSum(a, b) {
-  console.log(\`The sum of \${a} and \${b} is \${sum(a, b)}\`);
-}
-
-printSum(5, 3);
-    `.trim(),
+print_sum(5, 3)`.trim(),
   }
 }
 
 export default function AssessmentLayout() {
-  const [currentFile, setCurrentFile] = useState('math.js')
+  const [currentFile, setCurrentFile] = useState('math.py')
   const [files, setFiles] = useState(mockBugData.files)
   const [feedback, setFeedback] = useState('')
 
@@ -60,7 +50,7 @@ export default function AssessmentLayout() {
             <div className="bg-gray-700 px-4 py-2 text-sm font-medium">{currentFile}</div>
             <MonacoEditor
               height="500px"
-              language="javascript"
+              language="python"
               theme="vs-dark"
               value={files[currentFile as keyof typeof files]}
               onChange={handleCodeChange}
