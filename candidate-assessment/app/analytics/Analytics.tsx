@@ -32,31 +32,31 @@ const Analytics: React.FC<AnalyticsProps> = ({ metrics }) => {
       subject: 'Time Efficiency',
       value: Math.min(100, (60 / metrics.timeSpent) * 100),
       fullMark: 100,
-      color: '#FF4D4D',
+      color: '#ffc800',
     },
     {
       subject: 'Hint Independence',
       value: Math.max(0, 100 - (metrics.hintsUsed * 20)),
       fullMark: 100,
-      color: '#00E5CC',
+      color: '#00FFE5',
     },
     {
       subject: 'Success Rate',
       value: metrics.successRate,
       fullMark: 100,
-      color: '#3399FF',
+      color: '#1A8CFF',
     },
     {
       subject: 'Code Efficiency',
       value: metrics.efficiency,
       fullMark: 100,
-      color: '#66CC66',
+      color: '#33FF33',
     },
     {
       subject: 'Solution Quality',
       value: metrics.complexity,
       fullMark: 100,
-      color: '#B266FF',
+      color: '#CC33FF',
     },
   ];
 
