@@ -6,7 +6,6 @@ import {
   RadarChart,
   PolarGrid,
   PolarAngleAxis,
-  ResponsiveContainer,
 } from 'recharts';
 
 interface MetricData {
@@ -19,10 +18,10 @@ interface MetricData {
 interface AnalyticsProps {
   metrics: {
     timeSpent: number;      
-    hintsUsed: number;      
-    successRate: number;    
-    efficiency: number;     
-    complexity: number;     
+    hintReliance: number;      
+    questionsAttempted: number;    
+    codeStyle: number;     
+    technicalExpertise: number;     
   };
 }
 
@@ -30,33 +29,33 @@ const Analytics: React.FC<AnalyticsProps> = ({ metrics }) => {
   const data: MetricData[] = [
     {
       subject: 'Time Efficiency',
-      value: Math.min(100, (60 / metrics.timeSpent) * 100),
+      value: metrics.timeSpent,
       fullMark: 100,
-      color: '#FF4D4D',
+      color: '#ffc800',
     },
     {
       subject: 'Hint Independence',
-      value: Math.max(0, 100 - (metrics.hintsUsed * 20)),
+      value: metrics.hintReliance,
       fullMark: 100,
-      color: '#00E5CC',
+      color: '#00FFE5',
     },
     {
-      subject: 'Success Rate',
-      value: metrics.successRate,
+      subject: 'Questions Attempted',
+      value: metrics.questionsAttempted,
       fullMark: 100,
-      color: '#3399FF',
+      color: '#1A8CFF',
     },
     {
-      subject: 'Code Efficiency',
-      value: metrics.efficiency,
+      subject: 'Code Style',
+      value: metrics.codeStyle,
       fullMark: 100,
-      color: '#66CC66',
+      color: '#33FF33',
     },
     {
-      subject: 'Solution Quality',
-      value: metrics.complexity,
+      subject: 'Technical Expertise',
+      value: metrics.technicalExpertise,
       fullMark: 100,
-      color: '#B266FF',
+      color: '#CC33FF',
     },
   ];
 

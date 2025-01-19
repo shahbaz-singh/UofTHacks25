@@ -24,6 +24,8 @@ import UMLViewer from './UMLViewer'
 const inter = Inter({ subsets: ['latin'] })
 import { UmlChallenges } from '../data/challenges'
 import UMLScoreDisplay from './UMLScoreDisplay'
+import { useRouter } from 'next/navigation'
+import EyeTracker from './EyeTracker'
 
 
 const MonacoEditor = dynamic(() => import('@monaco-editor/react'), { ssr: false })
@@ -60,6 +62,7 @@ const parseTestResults = (feedback: string): TestResult => {
 };
 
 export default function AssessmentLayout() {
+  const router = useRouter()
   const [currentChallenge, setCurrentChallenge] = useState<Challenge | UMLChallenge>(challenges[0])
   const [currentFile, setCurrentFile] = useState(Object.keys(challenges[0].files)[0])
   const [files, setFiles] = useState(challenges[0].files)
@@ -136,6 +139,10 @@ export default function AssessmentLayout() {
     setFeedback('');
   }
 
+  const handleExit = () => {
+    router.push('/analytics')
+  }
+
   if (isLoading) {
     return <LoadingScreen onLoadingComplete={() => setIsLoading(false)} />
   }
@@ -149,7 +156,13 @@ export default function AssessmentLayout() {
             <span className="text-white">eet</span>
             <span className="text-[#FFA116]">Code</span>
           </h1>
-          
+          <button
+            onClick={handleExit}
+            className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition"
+          >
+            Exit Assessment
+          </button>
+          <EyeTracker />
           <DropdownMenu>
             <DropdownMenuTrigger className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-200 hover:text-white bg-gray-800 rounded-lg hover:bg-gray-700 transition-colors">
               {selectedChallengeType}

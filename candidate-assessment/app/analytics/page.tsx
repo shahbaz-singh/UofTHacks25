@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import dynamic from 'next/dynamic';
 
 // Dynamically import Analytics with no SSR
@@ -8,13 +9,13 @@ const Analytics = dynamic(() => import('./Analytics'), {
 });
 
 export default function AnalyticsPage() {
-  const sampleMetrics = {
-    timeSpent: 100,
-    hintsUsed: 2,
-    successRate: 70,
-    efficiency: 90,
-    complexity: 75,
-  };
+  const [userMetrics, setUserMetrics] = useState({
+    timeSpent: Math.floor(Math.random() * 51) + 50,
+    hintReliance: Math.floor(Math.random() * 51) + 50,
+    questionsAttempted: Math.floor(Math.random() * 51) + 50,
+    codeStyle: Math.floor(Math.random() * 51) + 50,
+    technicalExpertise: Math.floor(Math.random() * 51) + 50,
+  });
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
@@ -27,9 +28,9 @@ export default function AnalyticsPage() {
             Track your progress and identify areas for improvement
           </p>
         </div>
-        
+
         <div className="bg-white rounded-lg shadow-lg p-6">
-          <Analytics metrics={sampleMetrics} />
+          <Analytics metrics={userMetrics} />
         </div>
       </div>
     </div>
