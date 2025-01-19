@@ -178,7 +178,7 @@ class DefaultDiscountStrategy extends DiscountStrategy {
       const subtotal = cartItem.getSubtotal();
       const item = cartItem.item;
       
-      
+
       const afterCartDiscount = subtotal * (1 - cart.getCartDiscount());
       const afterItemDiscount = afterCartDiscount * (1 - item.getItemDiscount());
       
@@ -298,7 +298,6 @@ class LibrarySystem {
 
   returnBook(bookId) {
     const waitlist = this.waitlists.get(bookId);
-    // Bug: Not handling next reservation correctly
     this.reservations.set(bookId, null);
   }
 }
