@@ -16,8 +16,10 @@ import { challenges, Challenge } from '../data/challenges'
 import { Badge } from '@/app/components/ui/badge'
 import { Inter } from 'next/font/google'
 import LoadingScreen from './LoadingScreen'
-import { mathChallenge, animalChallenge, getRandomDocumentationChallenge } from '../data/documentation-challenges'
+import { mathChallenge, animalChallenge, getNextDocumentationChallenge } from '../data/documentation-challenges'
 import DocumentationMetrics from './DocumentationMetrics'
+import { socialMediaChallenge } from '../data/unit-test-challenges'
+import TestResults, { TestResult } from './TestResults'
 const inter = Inter({ subsets: ['latin'] })
 
 const MonacoEditor = dynamic(() => import('@monaco-editor/react'), { ssr: false })
@@ -28,7 +30,31 @@ const difficultyColors = {
   'Hard': 'bg-red-500'
 }
 
-
+const parseTestResults = (feedback: string): TestResult => {
+  try {
+    // Parse the JSON string directly
+    const results = JSON.parse(feedback);
+    // Ensure we have all required fields with correct types
+    return {
+      passedTests: Number(results.passedTests) || 0,
+      totalTests: Number(results.totalTests) || 0,
+      failedTests: Array.isArray(results.failedTests) ? results.failedTests : [],
+      coverage: Number(results.coverage) || 0,
+      creativity: Number(results.creativity) || 0,
+      feedback: results.feedback || 'No feedback available'
+    };
+  } catch (error) {
+    console.error('Error parsing test results:', error);
+    return {
+      passedTests: 0,
+      totalTests: 0,
+      failedTests: [],
+      coverage: 0,
+      creativity: 0,
+      feedback: 'Error parsing test results'
+    };
+  }
+};
 
 export default function AssessmentLayout() {
   const [currentChallenge, setCurrentChallenge] = useState<Challenge>(challenges[0])
@@ -79,12 +105,13 @@ export default function AssessmentLayout() {
               </DropdownMenuItem>
               <DropdownMenuItem 
                 className="text-gray-200 hover:text-white hover:bg-gray-700 cursor-pointer"
-                onClick={() => handleChallengeChange(getRandomDocumentationChallenge())}
+                onClick={() => handleChallengeChange(getNextDocumentationChallenge(currentChallenge.id))}
               >
                 Documentation
               </DropdownMenuItem>
               <DropdownMenuItem 
                 className="text-gray-200 hover:text-white hover:bg-gray-700 cursor-pointer"
+                onClick={() => handleChallengeChange(socialMediaChallenge)}
               >
                 Unit Tests
               </DropdownMenuItem>
@@ -159,10 +186,14 @@ export default function AssessmentLayout() {
           />
           {feedback && (
             <div className="mt-4 p-4 bg-gray-800 rounded-lg">
-              <h2 className="text-xl font-semibold mb-4">Documentation Analysis</h2>
+              <h2 className="text-xl font-semibold mb-4">
+                {currentChallenge.id === 'social-media-tests' ? 'Test Results' : 'Documentation Analysis'}
+              </h2>
               {(currentChallenge.id === 'documentation-challenge-math' || 
                 currentChallenge.id === 'documentation-challenge-animals') ? (
                 <DocumentationMetrics feedback={feedback} />
+              ) : currentChallenge.id === 'social-media-tests' ? (
+                <TestResults results={parseTestResults(feedback)} />
               ) : (
                 <p className="whitespace-pre-line">{feedback}</p>
               )}

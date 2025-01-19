@@ -5,6 +5,7 @@ import { Challenge } from '../data/challenges'
 import { SolutionQueryGPT } from "../api/gpt-api/grade-solution"
 import { QueryGPT } from "../api/gpt-api/query-gpt"
 import LoadingIndicator from './LoadingIndicator'
+import { runTests } from '../utils/testRunner'
 
 
 declare global {
@@ -236,6 +237,46 @@ export default function SubmitSolution({ currentChallenge, files, setFeedback, e
     return feedback;
   }
 
+  const parseGPTAnalysis = (response: string) => {
+    try {
+      const lines = response.trim().split('\n').filter(line => line.trim() !== '')
+      
+      const getCoverage = () => {
+        const coverageLine = lines.find(l => l.includes('COVERAGE:'))
+        return coverageLine ? parseInt(coverageLine.split('COVERAGE:')[1]) || 0 : 0
+      }
+
+      const getCreativity = () => {
+        const creativityLine = lines.find(l => l.includes('CREATIVITY:'))
+        return creativityLine ? parseInt(creativityLine.split('CREATIVITY:')[1]) || 0 : 0
+      }
+
+      const getFeedback = () => {
+        const feedbackLine = lines.find(l => l.includes('FEEDBACK:'))
+        return feedbackLine ? feedbackLine.split('FEEDBACK:')[1].trim() : 'No feedback provided'
+      }
+
+      return {
+        coverage: getCoverage(),
+        creativity: getCreativity(),
+        feedback: getFeedback(),
+        failedTests: [],
+        passedTests: 0,
+        totalTests: 0
+      }
+    } catch (error) {
+      console.error('Error parsing GPT analysis:', error)
+      return {
+        coverage: 0,
+        creativity: 0,
+        feedback: 'Error parsing analysis',
+        failedTests: [],
+        passedTests: 0,
+        totalTests: 0
+      }
+    }
+  }
+
   const handleSubmit = async () => {
     setIsSubmitting(true)
     try {
@@ -287,12 +328,17 @@ export default function SubmitSolution({ currentChallenge, files, setFeedback, e
             result = await testAIChallengeSolution(files, expectedFunctionality)
             setFeedback(result)
             break
+        case 'social-media-tests': {
+          const results = runTests(files);
+          setFeedback(results);
+          break;
+        }
         default:
           setFeedback('Unknown challenge type')
       }
     } catch (error) {
+      console.error('Submission error:', error)
       setFeedback('An error occurred while testing your solution.')
-      console.error('Testing error:', error)
     } finally {
       setIsSubmitting(false)
     }

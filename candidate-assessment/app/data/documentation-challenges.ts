@@ -208,6 +208,13 @@ class Zoo {
   }
 }
 
-export const getRandomDocumentationChallenge = (): Challenge => {
-  return Math.random() < 0.5 ? mathChallenge : animalChallenge
+export const getNextDocumentationChallenge = (currentId?: string): Challenge => {
+  if (currentId === 'documentation-challenge-math') {
+    return animalChallenge
+  }
+  if (currentId === 'documentation-challenge-animals') {
+    return mathChallenge
+  }
+  // Default to math if no current challenge
+  return mathChallenge
 } 
