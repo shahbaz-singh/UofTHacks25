@@ -29,7 +29,7 @@ const Analytics: React.FC<AnalyticsProps> = ({ metrics }) => {
   const data: MetricData[] = [
     {
       subject: 'Time Efficiency',
-      value: 100 - metrics.timeSpent ? metrics.timeSpent < 100 : 300 - metrics.timeSpent,
+      value: metrics.timeSpent < 100 ? 100 - metrics.timeSpent : Math.max(Math.min(300 - metrics.timeSpent, 96), 18),
       fullMark: 100,
       color: '#ffc800',
     },
