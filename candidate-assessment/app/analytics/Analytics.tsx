@@ -28,13 +28,13 @@ interface AnalyticsProps {
 const Analytics: React.FC<AnalyticsProps> = ({ metrics }) => {
   const data: MetricData[] = [
     {
-      subject: 'Time Spent',
-      value: metrics.timeSpent / 60,
+      subject: 'Time Efficiency',
+      value: 100 - metrics.timeSpent ? metrics.timeSpent < 100 : 300 - metrics.timeSpent,
       fullMark: 100,
       color: '#ffc800',
     },
     {
-      subject: 'Hint Reliance',
+      subject: 'Hint Independence',
       value: Math.max(0, 100 - (metrics.hintReliance * 20)),
       fullMark: 100,
       color: '#00FFE5',
