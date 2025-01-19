@@ -6,6 +6,34 @@ export interface Challenge {
   files: { [key: string]: string }
 }
 
+export interface UMLChallenge {
+    id: string
+    files: { [key: string]: string }
+    diagram: string
+    description: string
+}
+
+export const UmlChallenges: { [key: string]: UMLChallenge } = {
+    "/1.jpg":{
+        id: 'uml-challenge',
+        files: {},
+        diagram: '/1.jpg',
+        description: 'A UML diagram representing a bank account system with chequing accounts, savings accounts and users.'
+    }, 
+    "/2.jpg":{
+        id: 'uml-challenge',
+        files: {},
+        diagram: '/2.jpg',
+        description: 'A UML diagram for a system storing information about different animals.'
+    }, 
+    "/3.jpg":{
+        id: 'uml-challenge',
+        files: {},
+        diagram: '/3.jpg',
+        description: 'A UML diagram for an academic records system for a university, storing information about students and professors.'
+    }
+}
+
 export const challenges: Challenge[] = [
   {
     id: 'bank-account-system',

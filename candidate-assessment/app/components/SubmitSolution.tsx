@@ -1,11 +1,12 @@
 import { Button } from "./ui/button"
 import { Send } from 'lucide-react'
 import { useState } from 'react'
-import { Challenge } from '../data/challenges'
+import { Challenge, UMLChallenge } from '../data/challenges'
 import { SolutionQueryGPT } from "../api/gpt-api/grade-solution"
 import { QueryGPT } from "../api/gpt-api/query-gpt"
 import LoadingIndicator from './LoadingIndicator'
 import { runTests } from '../utils/testRunner'
+import { UMLQueryGPT } from "../api/gpt-api/grade-uml"
 
 
 declare global {
@@ -14,13 +15,14 @@ declare global {
 }
 
 interface SubmitSolutionProps {
-  currentChallenge: Challenge
+  currentChallenge: Challenge | UMLChallenge
   files: { [key: string]: string }
+  diagram: string | null
   setFeedback: (feedback: string) => void
   expectedFunctionality: string
 }
 
-export default function SubmitSolution({ currentChallenge, files, setFeedback, expectedFunctionality}: SubmitSolutionProps) {
+export default function SubmitSolution({ currentChallenge, files, diagram, setFeedback, expectedFunctionality}: SubmitSolutionProps) {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showSolution, setShowSolution] = useState(false)
 
@@ -328,6 +330,10 @@ export default function SubmitSolution({ currentChallenge, files, setFeedback, e
             result = await testAIChallengeSolution(files, expectedFunctionality)
             setFeedback(result)
             break
+        case 'uml-challenge':
+          result = await UMLQueryGPT(files, diagram as string)
+          setFeedback(result)
+          break
         case 'social-media-tests': {
           const testResults = runTests(files);
           
