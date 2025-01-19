@@ -25,7 +25,7 @@ const inter = Inter({ subsets: ['latin'] })
 import { UmlChallenges } from '../data/challenges'
 import UMLScoreDisplay from './UMLScoreDisplay'
 import { useRouter } from 'next/navigation'
-import EyeTracker from './EyeTracker'
+import Modal from './Modal'
 
 
 const MonacoEditor = dynamic(() => import('@monaco-editor/react'), { ssr: false })
@@ -73,6 +73,8 @@ export default function AssessmentLayout() {
   const [dynamicFiles, setDynamicFiles] = useState<Record<string, string>>({
     'solution.ts': '// Write your solution here'
   })
+  const [isPageVisible, setIsPageVisible] = useState(true);
+  const [showModal, setShowModal] = useState(false);
 
   const startingUMLChallenge = UmlChallenges['/1.jpg'];
 
@@ -143,6 +145,23 @@ export default function AssessmentLayout() {
     router.push('/analytics')
   }
 
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        setIsPageVisible(false);
+        setShowModal(true); // Show modal when page is hidden
+      } else {
+        setIsPageVisible(true);
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, []);
+
   if (isLoading) {
     return <LoadingScreen onLoadingComplete={() => setIsLoading(false)} />
   }
@@ -162,7 +181,6 @@ export default function AssessmentLayout() {
           >
             Exit Assessment
           </button>
-          <EyeTracker />
           <DropdownMenu>
             <DropdownMenuTrigger className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-200 hover:text-white bg-gray-800 rounded-lg hover:bg-gray-700 transition-colors">
               {selectedChallengeType}
@@ -310,6 +328,13 @@ export default function AssessmentLayout() {
           )}
         </div>
       </div>
+
+      {showModal && (
+        <Modal 
+          message="You have left the assessment page. This will be recorded." 
+          onClose={() => setShowModal(false)}
+        />
+      )}
     </div>
   )
 }

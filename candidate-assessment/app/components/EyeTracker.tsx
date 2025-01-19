@@ -54,7 +54,7 @@ const EyeTracker = () => {
     }
   }, [tracking]);
 
-  return <div>Eye Tracker Component</div>;
+  return <div></div>;
 };
 
 export default EyeTracker; 

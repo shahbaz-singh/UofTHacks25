@@ -1,6 +1,7 @@
 "use client"
 
 import AssessmentLayout from './components/AssessmentLayout'
+import EyeTracker from './components/EyeTracker'
 
 export default function Home() {
     
@@ -8,6 +9,7 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-gray-900 text-white">
       <AssessmentLayout />
+      <EyeTracker />
     </main>
   )
 }
