@@ -329,37 +329,41 @@ export default function SubmitSolution({ currentChallenge, files, setFeedback, e
             setFeedback(result)
             break
         case 'social-media-tests': {
-          // First run tests locally
           const testResults = runTests(files);
           
-          // Then get GPT analysis of test quality
-          const prompt = `
-            Analyze these unit tests for code coverage and creativity.
-            Do not evaluate test passes/failures, only analyze:
-            1. Code coverage (% of methods and edge cases tested)
-            2. Test creativity (variety of scenarios, edge cases, error conditions)
-            
-            Unit Tests:
-            ${files['tests/socialMedia.test.js']}
-            
-            Format response exactly as:
-            COVERAGE: Z%
-            CREATIVITY: W%
-            FEEDBACK: Brief analysis of test quality and suggestions
-          `;
+          // Extract unique functions from test names
+          const uniqueFunctions = new Set();
+          const testFile = files['tests/socialMedia.test.js'];
+          
+          // Look for function calls in the test file
+          const functionCalls = testFile.match(/\.(follow|unfollow|createPost|like|addComment)\(/g) || [];
+          functionCalls.forEach(call => {
+            const func = call.slice(1, -1); // Remove the dot and parenthesis
+            uniqueFunctions.add(func);
+          });
 
-          const [gptAnalysis] = await Promise.all([
-            QueryGPT(prompt),
-            new Promise(resolve => setTimeout(resolve, 3000))
-          ]);
+          // Add passed test functions
+          if (testResults.passedTests > 0) {
+            testFile.split('test(').forEach(test => {
+              const functionMatch = test.match(/\.(follow|unfollow|createPost|like|addComment)\(/);
+              if (functionMatch) {
+                uniqueFunctions.add(functionMatch[1]);
+              }
+            });
+          }
 
-          // Combine local test results with GPT analysis
-          const combinedResult = {
-            ...testResults,
-            ...parseGPTAnalysis(gptAnalysis)
-          };
+          // Calculate metrics
+          const coverage = Math.min(100, (testResults.totalTests / 5) * 100); // 5 tests = 100% coverage
+          const creativity = Math.min(100, (uniqueFunctions.size / 3) * 100); // 3 unique functions = 100% creativity
 
-          setFeedback(JSON.stringify(combinedResult));
+          setFeedback(JSON.stringify({
+            passedTests: testResults.passedTests,
+            totalTests: testResults.totalTests,
+            failedTests: testResults.failedTests,
+            coverage,
+            creativity,
+            feedback: testResults.feedback
+          }));
           break;
         }
         default:
@@ -383,9 +387,9 @@ export default function SubmitSolution({ currentChallenge, files, setFeedback, e
           className="w-full"
           disabled={isSubmitting}
         >
-          <Send className="mr-2" size={16} />
+        <Send className="mr-2" size={16} />
           {isSubmitting ? 'Testing...' : 'Submit Solution'}
-        </Button>
+      </Button>
         {currentChallenge.id !== 'ai-challenge' && (
           <Button
             onClick={() => setShowSolution(!showSolution)}
