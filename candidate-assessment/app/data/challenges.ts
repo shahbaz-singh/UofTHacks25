@@ -278,7 +278,7 @@ class LibrarySystem {
     this.waitlists.set(book.id, []);
   }
 
-  // Bug: Incorrect reservation handling
+
   reserveBook(bookId, userId) {
     const book = this.books.get(bookId);
     if (!book) return false;
@@ -286,7 +286,7 @@ class LibrarySystem {
     const currentReservation = this.reservations.get(bookId);
     const waitlist = this.waitlists.get(bookId);
 
-    // Bug: Not checking waitlist properly
+
     if (!currentReservation) {
       this.reservations.set(bookId, userId);
       return true;

@@ -7,7 +7,7 @@ export interface TestResult {
   feedback: string;
 }
 
-export function runTests(files: { [key: string]: string }): string {
+export function runTests(files: { [key: string]: string }): TestResult {
   try {
     const testFile = files['tests/socialMedia.test.js'];
     console.log('\n=== Starting Test Run ===');
@@ -87,8 +87,7 @@ export function runTests(files: { [key: string]: string }): string {
     }
     console.log('==================\n');
 
-    // Return stringified results for the UI
-    return JSON.stringify({
+    return {
       passedTests,
       totalTests,
       failedTests,
@@ -99,13 +98,12 @@ export function runTests(files: { [key: string]: string }): string {
         : failedTests.length > 0 
           ? `${failedTests.length} tests failed: ${failedTests.map(f => f.name).join(', ')}`
           : `All ${passedTests} tests passed successfully!`
-    });
+    };
   } catch (error) {
     console.error('\n=== Test Runner Error ===');
     console.error(error);
     console.error('=====================\n');
-    // Return stringified error results
-    return JSON.stringify({
+    return {
       passedTests: 0,
       totalTests: 0,
       failedTests: [{ 
@@ -115,6 +113,6 @@ export function runTests(files: { [key: string]: string }): string {
       coverage: 0,
       creativity: 0,
       feedback: 'Failed to run tests due to setup error'
-    });
+    };
   }
 } 

@@ -32,15 +32,14 @@ const difficultyColors = {
 
 const parseTestResults = (feedback: string): TestResult => {
   try {
-    // Parse the JSON string directly
+    // Parse the JSON string into an object
     const results = JSON.parse(feedback);
-    // Ensure we have all required fields with correct types
     return {
-      passedTests: Number(results.passedTests) || 0,
-      totalTests: Number(results.totalTests) || 0,
-      failedTests: Array.isArray(results.failedTests) ? results.failedTests : [],
-      coverage: Number(results.coverage) || 0,
-      creativity: Number(results.creativity) || 0,
+      passedTests: results.passedTests || 0,
+      totalTests: results.totalTests || 0,
+      failedTests: results.failedTests || [],
+      coverage: results.coverage || 0,
+      creativity: results.creativity || 0,
       feedback: results.feedback || 'No feedback available'
     };
   } catch (error) {

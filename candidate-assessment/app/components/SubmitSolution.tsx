@@ -329,16 +329,45 @@ export default function SubmitSolution({ currentChallenge, files, setFeedback, e
             setFeedback(result)
             break
         case 'social-media-tests': {
-          const results = runTests(files);
-          setFeedback(results);
+          // First run tests locally
+          const testResults = runTests(files);
+          
+          // Then get GPT analysis of test quality
+          const prompt = `
+            Analyze these unit tests for code coverage and creativity.
+            Do not evaluate test passes/failures, only analyze:
+            1. Code coverage (% of methods and edge cases tested)
+            2. Test creativity (variety of scenarios, edge cases, error conditions)
+            
+            Unit Tests:
+            ${files['tests/socialMedia.test.js']}
+            
+            Format response exactly as:
+            COVERAGE: Z%
+            CREATIVITY: W%
+            FEEDBACK: Brief analysis of test quality and suggestions
+          `;
+
+          const [gptAnalysis] = await Promise.all([
+            QueryGPT(prompt),
+            new Promise(resolve => setTimeout(resolve, 3000))
+          ]);
+
+          // Combine local test results with GPT analysis
+          const combinedResult = {
+            ...testResults,
+            ...parseGPTAnalysis(gptAnalysis)
+          };
+
+          setFeedback(JSON.stringify(combinedResult));
           break;
         }
         default:
           setFeedback('Unknown challenge type')
       }
     } catch (error) {
-      console.error('Submission error:', error)
       setFeedback('An error occurred while testing your solution.')
+      console.error('Testing error:', error)
     } finally {
       setIsSubmitting(false)
     }
